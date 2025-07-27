@@ -1,0 +1,106 @@
+.history-link {
+    position: fixed;
+    top: 50px;
+    left: -10px;
+    z-index: 100;
+}
+
+.nav-link {
+    background-color: #818181;
+    color: white;
+    text-decoration: none;
+    padding: 12px 30px 12px 40px;
+    border-radius: 0px 25px 25px 0px;
+    font-size: 1.2em;
+    transition: all 0.3s ease;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.075);
+    display: block;
+}
+
+.nav-link:hover {
+    background-color: #474747;
+    transform: translateX(5px);
+}
+
+.nav-link.disabled {
+    opacity: 0.2;
+    pointer-events: none;
+    transform: none;
+    background-color: #818181;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.nav-link.disabled:hover {
+    background-color: #727272;
+    transform: translateX(5px);
+}
+
+#status {
+    color: #888;
+    font-size: 1.8em;
+    margin: 90px 0 40px 0;  /* 50px added to top margin */
+    text-align: center;
+    font-weight: 300;
+}
+
+#recordBtn {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #7FB3D5, #5499C7);
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#recordBtn i {
+    transition: all 0.3s ease;
+}
+
+#recordBtn:hover {
+    transform: translateX(-50%) scale(1.05);
+    background: linear-gradient(135deg, #5499C7, #2980B9);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+#recordBtn:hover i {
+    transform: scale(1.1);
+}
+
+#recordBtn:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+#recordBtn.recording {
+    animation: pulse 2s infinite;
+    background: linear-gradient(135deg, #E74C3C, #C0392B);
+}
+
+#recordBtn.recording i {
+    animation: micPulseGlow 1.8s infinite cubic-bezier(0.66, 0, 0.34, 1);
+    will-change: transform, filter;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+}
+
+@keyframes micPulseGlow {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0.0));
+    }
+    50% {
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+    }
+}
+

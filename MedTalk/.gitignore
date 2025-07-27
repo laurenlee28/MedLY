@@ -1,0 +1,4 @@
+# 🧠 모델 및 환경 제외
+model/ner_saved_model/
+medTalk/lib/
+model/edge_env/

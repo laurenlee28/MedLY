@@ -1,0 +1,32 @@
+# === Core Deep Learning ===
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# === Transformer Models ===
+transformers==4.40.0
+datasets
+tokenizers
+
+# === Qwen Adapter Inference ===
+accelerate
+peft==0.16.0
+
+# === Whisper STT ===
+git+https://github.com/openai/whisper.git
+
+# === Korean NLP (NER) ===
+konlpy
+mecab-python3
+
+# === Web Framework ===
+fastapi
+uvicorn[standard]
+websockets
+
+# === Utility / Parsing ===
+ffmpeg-python
+pydantic==2.5.3
+sentencepiece==0.1.99
+scikit-learn
+numpy
+tqdm

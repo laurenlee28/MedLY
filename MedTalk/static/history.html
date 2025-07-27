@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>음성 인식 기록</title>
+    <link rel="stylesheet" href="/static/styles/history.css">
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            background: #f7f9fa;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 80px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background-color: #b5b5b5;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .recording-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recording-text {
+            font-size: 16px;
+            color: #222;
+            word-break: break-word;
+        }
+
+        .recording-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        .timestamp {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #777;
+            align-self: flex-end;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>음성 인식 기록</h1>
+        <a href="/" class="nav-link">녹음 페이지로 이동</a>
+        <div id="recordings-list"></div>
+    </div>
+
+    <script>
+        const recordingsList = document.getElementById('recordings-list');
+
+        function formatExplanations(explanations) {
+            if (!explanations || Object.keys(explanations).length === 0) return "없음";
+            return Object.entries(explanations).map(([term, desc]) =>
+                `<span style="display:block; margin-top:5px;">🩺 <b>${term}</b>: ${desc}</span>`
+            ).join('');
+        }
+
+        async function loadRecordings() {
+            try {
+                const response = await fetch('/recordings-data');
+                const data = await response.json();
+                
+                recordingsList.innerHTML = data.recordings.map(recording => `
+                    <div class="recording-item">
+                        <div class="recording-text">
+                            <strong>전사:</strong> ${recording.text}<br>
+                            <strong>설명:</strong><br>${formatExplanations(recording.explanations)}
+                        </div>
+                        <div class="recording-info">
+                            <audio controls src="/recordings/${recording.filename}"></audio>
+                            <span class="timestamp">${recording.timestamp}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('기록 로딩 오류:', err);
+                recordingsList.innerHTML = '<div class="error">기록을 불러올 수 없습니다.</div>';
+            }
+        }
+
+        loadRecordings();
+    </script>
+</body>
+</html>

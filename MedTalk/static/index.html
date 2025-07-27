@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>말풀이 AI</title>
+    <link rel="stylesheet" href="/static/styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="history-link">
+        <a href="/history" class="nav-link">ㅤ기록 보기ㅤ</a>
+    </div>
+    <div id="status">무엇이든 들려주세요</div>
+    <button id="recordBtn">
+        <i class="fas fa-microphone"></i>
+    </button>
+    <div id="recordings"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const recordBtn = document.getElementById('recordBtn');
+        const recordingsDiv = document.getElementById('recordings');
+        let mediaRecorder;
+        let ws;
+        let chunks = [];
+        let isRecording = false;
+        let isSegmenting = false;
+
+        recordBtn.onclick = async () => {
+            if (isRecording) {
+                stopRecording();
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 16000
+                    }
+                });
+
+                ws = new WebSocket(`ws://${location.host}/ws/audio`);
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 16000
+                });
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        chunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    if (chunks.length > 0 && ws && ws.readyState === WebSocket.OPEN) {
+                        const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
+                        await ws.send(await blob.arrayBuffer());
+                        chunks = [];
+                    }
+
+                    if (isSegmenting) {
+                        mediaRecorder.start();
+                        setTimeout(() => {
+                            if (mediaRecorder.state === 'recording') {
+                                mediaRecorder.stop();
+                            }
+                        }, 10000);
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.status === 'success') {
+                        const item = document.createElement('div');
+                        item.className = 'recording-item';
+                        item.innerHTML = `
+                            <div class="recording-text">
+                                <strong>전사:</strong> ${data.text}<br>
+                                <strong>설명:</strong><br>${formatExplanations(data.explanations)}
+                            </div>
+                            <audio controls src="/recordings/${data.filename}"></audio>
+                        `;
+                        recordingsDiv.prepend(item);
+                    }
+                };
+
+                mediaRecorder.start();
+                isSegmenting = true;
+                isRecording = true;
+                statusDiv.textContent = "녹음 중...";
+                recordBtn.classList.add('recording');
+
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, 10000);
+
+            } catch (err) {
+                console.error("오류 발생:", err);
+                statusDiv.textContent = "마이크 접근 오류";
+            }
+        };
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            if (ws) {
+                ws.close();
+            }
+            isSegmenting = false;
+            isRecording = false;
+            recordBtn.classList.remove('recording');
+            statusDiv.textContent = "무엇이든 들려주세요";
+        }
+
+        function formatExplanations(explanations) {
+            if (!explanations || Object.keys(explanations).length === 0) return "없음";
+            return Object.entries(explanations).map(([term, desc]) =>
+                `<span style="display:block; margin-top:5px;">🩺 <b>${term}</b>: ${desc}</span>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>

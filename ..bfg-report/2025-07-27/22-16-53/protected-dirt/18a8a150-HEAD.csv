@@ -1,0 +1,3 @@
+b65376854fbcfc411b8a782e60d33a6121658c69,DELETE,executable,MedTalk/medTalk/lib/python3.10/site-packages/torch/lib/libtorch_cpu.dylib,193209248,
+b65376854fbcfc411b8a782e60d33a6121658c69,DELETE,executable,MedTalk/model/edge_env/lib/python3.10/site-packages/torch/lib/libtorch_cpu.dylib,193209248,
+f1b4040661dd305261d5e825713428a5c0a215db,DELETE,regular-file,MedTalk/model/ner_saved_model/model_weights.pth,449427814,
