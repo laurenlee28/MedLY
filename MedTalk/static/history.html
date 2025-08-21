@@ -99,8 +99,9 @@
                 recordingsList.innerHTML = data.recordings.map(recording => `
                     <div class="recording-item">
                         <div class="recording-text">
-                            <strong>전사:</strong> ${recording.text}<br>
-                            <strong>설명:</strong><br>${formatExplanations(recording.explanations)}
+                            <strong>녹음 내용</strong><br>${recording.text}<br><br>
+
+                            <strong>설명</strong><br>${formatExplanations(recording.explanations)}
                         </div>
                         <div class="recording-info">
                             <audio controls src="/recordings/${recording.filename}"></audio>

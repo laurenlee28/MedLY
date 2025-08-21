@@ -3,28 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>말풀이 AI</title>
-    <link rel="stylesheet" href="/static/styles/main.css">
+    <link rel="stylesheet" href="/static/styles/main.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
     <div class="history-link">
         <a href="/history" class="nav-link">ㅤ기록 보기ㅤ</a>
     </div>
-    <div id="status">무엇이든 들려주세요</div>
-    <button id="recordBtn">
-        <i class="fas fa-microphone"></i>
-    </button>
-    <div id="recordings"></div>
+    <div class="container">
+        <div id="status">무엇이든 들려주세요</div>
+        <div id="processing-indicator" style="display: none;">음성을 처리하고 있습니다...</div>
+        <div id="recordings"></div>
+        <button id="recordBtn">
+            <i class="fas fa-microphone"></i>
+        </button>
+    </div>
 
     <script>
         const statusDiv = document.getElementById('status');
         const recordBtn = document.getElementById('recordBtn');
         const recordingsDiv = document.getElementById('recordings');
+        const processingIndicator = document.getElementById('processing-indicator');
         let mediaRecorder;
         let ws;
         let chunks = [];
         let isRecording = false;
-        let isSegmenting = false;
+
+        function showProcessing(show) {
+            processingIndicator.style.display = show ? 'block' : 'none';
+        }
 
         recordBtn.onclick = async () => {
             if (isRecording) {
@@ -42,6 +49,37 @@
 
                 ws = new WebSocket(`ws://${location.host}/ws/audio`);
 
+                ws.onmessage = (event) => {
+                    console.log('WebSocket 메시지 수신:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.status === 'success') {
+                            const item = document.createElement('div');
+                            item.className = 'recording-item fade-in';
+                            item.innerHTML = `
+                                <div class="bubble transcript">
+                                    ${data.text}
+                                </div>
+                            `;
+                            recordingsDiv.prepend(item);
+                            showProcessing(false);
+                        }
+                    } catch (error) {
+                        console.error('메시지 처리 오류:', error);
+                        showProcessing(false);
+                    }
+                };
+
+                ws.onopen = () => console.log('WebSocket 연결됨');
+                ws.onclose = () => {
+                    console.log('WebSocket 연결 종료');
+                    showProcessing(false);
+                };
+                ws.onerror = (error) => {
+                    console.error('WebSocket 오류:', error);
+                    showProcessing(false);
+                };
+
                 mediaRecorder = new MediaRecorder(stream, {
                     mimeType: 'audio/webm;codecs=opus',
                     audioBitsPerSecond: 16000
@@ -55,12 +93,18 @@
 
                 mediaRecorder.onstop = async () => {
                     if (chunks.length > 0 && ws && ws.readyState === WebSocket.OPEN) {
+                        showProcessing(true);
                         const blob = new Blob(chunks, { type: 'audio/webm;codecs=opus' });
-                        await ws.send(await blob.arrayBuffer());
+                        try {
+                            await ws.send(await blob.arrayBuffer());
+                        } catch (error) {
+                            console.error('전송 오류:', error);
+                            showProcessing(false);
+                        }
                         chunks = [];
                     }
-
-                    if (isSegmenting) {
+                    
+                    if (isRecording) {
                         mediaRecorder.start();
                         setTimeout(() => {
                             if (mediaRecorder.state === 'recording') {
@@ -70,24 +114,7 @@
                     }
                 };
 
-                ws.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    if (data.status === 'success') {
-                        const item = document.createElement('div');
-                        item.className = 'recording-item';
-                        item.innerHTML = `
-                            <div class="recording-text">
-                                <strong>전사:</strong> ${data.text}<br>
-                                <strong>설명:</strong><br>${formatExplanations(data.explanations)}
-                            </div>
-                            <audio controls src="/recordings/${data.filename}"></audio>
-                        `;
-                        recordingsDiv.prepend(item);
-                    }
-                };
-
                 mediaRecorder.start();
-                isSegmenting = true;
                 isRecording = true;
                 statusDiv.textContent = "녹음 중...";
                 recordBtn.classList.add('recording');
@@ -101,6 +128,7 @@
             } catch (err) {
                 console.error("오류 발생:", err);
                 statusDiv.textContent = "마이크 접근 오류";
+                showProcessing(false);
             }
         };
 
@@ -111,17 +139,10 @@
             if (ws) {
                 ws.close();
             }
-            isSegmenting = false;
             isRecording = false;
             recordBtn.classList.remove('recording');
             statusDiv.textContent = "무엇이든 들려주세요";
-        }
-
-        function formatExplanations(explanations) {
-            if (!explanations || Object.keys(explanations).length === 0) return "없음";
-            return Object.entries(explanations).map(([term, desc]) =>
-                `<span style="display:block; margin-top:5px;">🩺 <b>${term}</b>: ${desc}</span>`
-            ).join('');
+            showProcessing(false);
         }
     </script>
 </body>

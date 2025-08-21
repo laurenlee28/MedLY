@@ -1,4 +1,18 @@
-# 🧠 모델 및 환경 제외
+# 모델 제외
 model/ner_saved_model/
-medTalk/lib/
-model/edge_env/
+
+# 파일 (50MB+) 제외
+*.onnx
+*.pt
+*.pth
+*.h5
+*.hdf5
+*.pkl
+*.bin
+*.safetensors
+
+# 로그 및 캐시
+logs/
+*.log
+__pycache__/
+.cache/
