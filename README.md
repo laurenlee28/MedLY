@@ -80,21 +80,21 @@ Python: 3.12.X (Recommended)
 ## 💡 Usage
 Follow these steps to use Medly for real-time medical conversation analysis:
 
-Start Recording: Click the Start button to begin the session. The application will immediately start listening and transcribing the conversation.
+1. Start Recording: Click the Start button to begin the session. The application will immediately start listening and transcribing the conversation.
 
-Live Transcription: As you speak, the transcribed text will appear in the Diagnosis area in real-time.
+2. Live Transcription: As you speak, the transcribed text will appear in the Diagnosis area in real-time.
 
-Stop Recording: Once the conversation is complete, click the Stop button.
+3. Stop Recording: Once the conversation is complete, click the Stop button.
 
-Review Analysis: After a moment, a concise Summary of the conversation will be generated. You will also see a list of important medical terms appear under Key Terms.
+4. Review Analysis: After a moment, a concise Summary of the conversation will be generated. You will also see a list of important medical terms appear under Key Terms.
 
-Get Definitions: Click on any term in the Key Terms list. Its definition will be displayed in the Definition panel on the right.
+5. Get Definitions: Click on any term in the Key Terms list. Its definition will be displayed in the Definition panel on the right.
 
-Adjust Reading Level: You can change the complexity of the term's explanation by selecting the desired level: Child, Student, or Adult.
+6. Adjust Reading Level: You can change the complexity of the term's explanation by selecting the desired level: Child, Student, or Adult.
 
-Download a Report: Click the Download PDF button to save a report containing the full transcript, summary, and key terms from the session.
+7. Download a Report: Click the Download PDF button to save a report containing the full transcript, summary, and key terms from the session.
 
-Start a New Session: To clear the current results and begin a new recording, click the New Session button (the "Stop" button becomes "New Session" after a session ends).
+8. Start a New Session: To clear the current results and begin a new recording, click the New Session button (the "Stop" button becomes "New Session" after a session ends).
 
 ---
 ## 👨‍💻 Synaptix : Team Members
