@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Medly - Real-time Medical Conversation Assistant</title>
+<link as="image" href="/static/assets/tiger-nurse.png" rel="preload"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+
+<link href="/static/styles/main.css" rel="stylesheet"/>
+
+</head>
+<body>
+<div class="app-container">
+<header class="header">
+<div class="logo">
+    <img src="/static/assets/tiger-nurse.png?v=1" alt="Medly Logo" class="logo-img" width="120" height="120" decoding="auto">
+    <span>MedLY</span><span class="dot">.</span>
+</div>
+<div class="control-wrapper">
+    <button id="help-btn">?</button>
+    <button id="control-btn"><i class="fas fa-play"></i> Start</button>
+</div>
+</header>
+<main class="main-content">
+<!-- Pane for live conversation transcript and key terms -->
+<div class="pane" id="conversation-pane">
+<div class="pane-title">Diagnosis</div>
+<div id="live-transcript">Press the 'Start' button to begin...</div>
+<div class="pane-title" style="margin-top: 18.00px;">Key Terms</div>
+<ul id="tagged-terms-list"></ul>
+</div>
+<!-- Pane for displaying definitions of key terms -->
+<div class="pane" id="definition-pane">
+<div class="pane-title">Definition</div>
+<div id="definition-card">
+<div id="definition-term">Select a key term</div>
+<div class="level-selector">
+<button class="level-btn active" data-level="Child" style=" font-size: 1.2rem;">Child</button>
+<button class="level-btn" data-level="Student" style=" font-size: 1.2rem;">Student</button>
+<button class="level-btn" data-level="Adult" style=" font-size: 1.2rem;">Adult</button>
+</div>
+<div id="definition-output"></div>
+</div>
+</div>
+<!-- Pane for displaying the final summary -->
+<div class="pane" id="summary-pane">
+<div class="pane-title">Summary</div>
+<div id="summary-output"></div>
+</div>
+</main>
+</div>
+
+<!-- Modal for help and instructions -->
+<div id="help-modal">
+    <div class="help-modal-content">
+        <button id="close-help-btn">&times;</button>
+        <h2>How to Use MedLY</h2>
+        <div id="help-content">
+            <h3>Steps:</h3>
+            <ol>
+                <li>Click the <strong>Start</strong> button to begin recording the conversation.</li>
+                <li>Speak clearly. The transcribed text will appear in the <strong>Diagnosis</strong> area.</li>
+                <li>Once you are finished, click the <strong>Stop</strong> button.</li>
+                <li>Wait for the <strong>Summary</strong> to be generated. This may take a moment.</li>
+                <li>Key medical terms identified in the conversation will appear under <strong>Key Terms</strong>. These terms will gently pulse to indicate they are interactive.</li>
+                <li>Click on a <strong>Key Term</strong>. A brief explanation of the term will appear in the <strong>Definition</strong> area on the right.</li>
+                <li>You can change the reading level of the definition (Child, Student, Adult) by clicking the corresponding buttons.</li>
+                <li>Click the <strong>New Session</strong> button (which replaces the Stop button) to start a new recording and analysis.</li>
+                <li>You can download the conversation transcript, key terms, and summary as a PDF by clicking the <strong>Download PDF</strong> button.</li>
+            </ol>
+            <h3>Features:</h3>
+            <ul>
+                <li><strong>Real-time Transcription:</strong> Converts spoken language into text.</li>
+                <li><strong>Key Term Identification:</strong> Automatically identifies important medical terms.</li>
+                <li><strong>Term Definitions:</strong> Provides explanations of medical terms at different reading levels.</li>
+                <li><strong>Summary Generation:</strong> Creates a concise summary of the medical conversation.</li>
+                <li><strong>PDF Export:</strong> Allows you to download a report of the session.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+        // --- DOM element references ---
+        const controlBtn = document.getElementById('control-btn');
+        const liveTranscript = document.getElementById('live-transcript');
+        const taggedTermsList = document.getElementById('tagged-terms-list');
+        const definitionTerm = document.getElementById('definition-term');
+        const definitionOutput = document.getElementById('definition-output');
+        const summaryOutput = document.getElementById('summary-output');
+        const levelSelector = document.querySelector('.level-selector');
+        
+        const helpBtn = document.getElementById('help-btn');
+        const helpModal = document.getElementById('help-modal');
+        const closeHelpBtn = document.getElementById('close-help-btn');
+
+        // --- State variables ---
+        let ws; // WebSocket instance
+        let isRecording = false;
+        let sessionFinished = false; 
+        let currentLevel = 'Child';
+        let currentTerm = null;
+
+        let summaryLoadingInterval = null;
+        let definitionLoadingInterval = null;
+
+        // --- Animates a loading text with trailing dots ---
+        function animateLoadingText(element, baseText) {
+            let dotCount = 1;
+            if (element.id === 'summary-output') {
+                element.innerHTML = `<pre>${baseText + '.'}</pre>`;
+            } else {
+                element.textContent = baseText + '.';
+            }
+            return setInterval(() => {
+                dotCount = (dotCount % 3) + 1;
+                const dots = '.'.repeat(dotCount);
+                if (element.id === 'summary-output') {
+                    element.innerHTML = `<pre>${baseText + dots}</pre>`;
+                } else {
+                    element.textContent = baseText + dots;
+                }
+            }, 400);
+        }
+
+        // --- Resets the UI to its initial state for a new session ---
+        function resetUI() {
+            liveTranscript.textContent = "Press the 'Start' button to begin...";
+            taggedTermsList.innerHTML = "";
+            summaryOutput.innerHTML = "";
+            definitionTerm.textContent = 'Select a keyword';
+            definitionOutput.textContent = '';
+            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.level-btn[data-level="Child"]').classList.add('active');
+            currentLevel = 'Child';
+            currentTerm = null;
+            isRecording = false;
+            sessionFinished = false;
+        }
+
+        // --- Initializes WebSocket connection and starts a new session ---
+        function startSession() {
+            if (sessionFinished) {
+                resetUI();
+            }
+            controlBtn.disabled = true;
+            controlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                ws.onclose = null; 
+                ws.close();
+            }
+            ws = new WebSocket(`ws://${location.host}/ws/ocr_pipeline`);
+
+            ws.onopen = () => {
+                console.log("WebSocket connected. Starting session.");
+                controlBtn.disabled = false;
+                ws.send(JSON.stringify({ command: "start" }));
+                isRecording = true;
+                sessionFinished = false;
+                controlBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+                controlBtn.classList.add('recording');
+            };
+
+            // --- Handles incoming messages from the WebSocket server ---
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === "live_text" || data.type === "final_update") {
+                    liveTranscript.textContent = data.sentence;
+                    updateTaggedTermsList(data.unique_terms || []);
+                } else if (data.type === "summary_result") {
+                    if (summaryLoadingInterval) clearInterval(summaryLoadingInterval);
+                    summaryLoadingInterval = null;
+                    const cleanOutput = data.output.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    summaryOutput.innerHTML = `<pre>${cleanOutput}</pre>`;
+                } else if (data.type === "term_definition") {
+                    if (definitionLoadingInterval) clearInterval(definitionLoadingInterval);
+                    definitionLoadingInterval = null;
+                    definitionOutput.textContent = data.definition;
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error("WebSocket Error:", error);
+                alert("Cannot connect to the server. Please check your connection and try again.");
+                controlBtn.disabled = false;
+                controlBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+                controlBtn.classList.remove('recording');
+            };
+
+            ws.onclose = () => {
+                console.log("WebSocket connection closed.");
+                isRecording = false;
+                if (!sessionFinished) {
+                    controlBtn.disabled = false;
+                    controlBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+                    controlBtn.classList.remove('recording');
+                }
+            };
+        }
+
+        // --- Stops the current session and requests a summary ---
+        function stopSession() {
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ command: "stop_session" }));
+                console.log("Session stopped. Ready for term definitions.");
+            }
+            isRecording = false;
+            sessionFinished = true;
+            controlBtn.innerHTML = '<i class="fas fa-redo"></i> New Session';
+            controlBtn.classList.remove('recording');
+
+            if (summaryLoadingInterval) clearInterval(summaryLoadingInterval);
+            summaryLoadingInterval = animateLoadingText(summaryOutput, 'GENERATING SENTENCES');
+        }
+
+        // --- Main control button event listener ---
+        controlBtn.onclick = () => {
+            if (isRecording) {
+                stopSession();
+            } else {
+                startSession();
+            }
+        };
+
+        // --- Updates the list of identified key terms in the UI ---
+        function updateTaggedTermsList(terms) {
+            taggedTermsList.innerHTML = '';
+            (terms || []).forEach(term => {
+                const li = document.createElement('li');
+                li.className = 'term-item';
+                li.textContent = term;
+                li.dataset.term = term;
+                if(term === currentTerm) li.classList.add('active');
+                taggedTermsList.appendChild(li);
+            });
+        }
+        
+        // --- Sends a request to the server to define a specific term ---
+        function requestDefinition(term, level) {
+            if (ws?.readyState === WebSocket.OPEN) {
+                definitionTerm.textContent = term;
+                if (definitionLoadingInterval) clearInterval(definitionLoadingInterval);
+                definitionLoadingInterval = animateLoadingText(definitionOutput, 'GENERATING SENTENCES');
+                ws.send(JSON.stringify({ command: "define_term", term, level }));
+            } else {
+                alert("Connection to the server is closed. Please start a new session.");
+            }
+        }
+        
+        // --- Event listener for clicking on a key term ---
+        taggedTermsList.onclick = (e) => {
+            if (e.target && e.target.classList.contains('term-item')) {
+                const term = e.target.dataset.term;
+                currentTerm = term;
+                document.querySelectorAll('.term-item').forEach(el => el.classList.remove('active'));
+                e.target.classList.add('active');
+                requestDefinition(term, currentLevel);
+            }
+        };
+
+        // --- Event listener for changing the definition's complexity level ---
+        levelSelector.onclick = (e) => {
+            if (e.target && e.target.classList.contains('level-btn')) {
+                currentLevel = e.target.dataset.level;
+                document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                if (currentTerm) {
+                    requestDefinition(currentTerm, currentLevel);
+                }
+            }
+        };
+
+        // --- Event listeners for the help modal ---
+        helpBtn.onclick = () => {
+            helpModal.style.display = 'flex';
+        };
+        closeHelpBtn.onclick = () => {
+            helpModal.style.display = 'none';
+        };
+        window.onclick = (event) => {
+            if (event.target == helpModal) {
+                helpModal.style.display = 'none';
+            }
+        };
+</script>
+<script>
+// --- This script dynamically creates and manages the "Download PDF" button ---
+(function() {
+  const btn = document.createElement('button');
+  btn.id = 'download-pdf-btn';
+  btn.type = 'button';
+  btn.setAttribute('aria-label', 'Download conversation as PDF');
+  btn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M10 2a1 1 0 011 1v8.586l2.293-2.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4A1 1 0 116.707 9.293L9 11.586V3a1 1 0 011-1z"/>
+      <path d="M3 15a1 1 0 011-1h12a1 1 0 010 2H4a1 1 0 01-1-1z"/>
+    </svg>
+    <span>Download PDF</span>
+  `;
+
+  // --- Tries to place the button next to the "Summary" title ---
+  let placed = false;
+  try {
+    const paneTitles = Array.from(document.querySelectorAll('.pane-title, .title, [data-pane-title]'));
+    for (const el of paneTitles) {
+      const txt = (el.textContent || '').trim().toLowerCase();
+      if (txt.includes('summary') || txt.includes('요약')) {
+        const wrap = document.createElement('span');
+        wrap.style.cssText = 'float:right; display:inline-flex; gap:8px; align-items:center;';
+        wrap.appendChild(btn);
+        el.style.position = 'relative';
+        el.appendChild(wrap);
+        placed = true;
+        break;
+      }
+    }
+  } catch (e) { console.warn('Place button failed', e); }
+
+  // --- If placement fails, creates a floating action button as a fallback ---
+  let fab;
+  if (!placed) {
+    fab = document.createElement('button');
+    fab.id = 'download-pdf-fab';
+    fab.type = 'button';
+    fab.setAttribute('aria-label', 'Download conversation as PDF');
+    fab.innerHTML = btn.innerHTML;
+    document.body.appendChild(fab);
+  }
+
+  // --- Function to gather data and request PDF generation ---
+  async function downloadPDF() {
+    const byId = (id) => document.getElementById(id);
+    const transcript = byId('live-transcript')?.textContent?.trim() || '';
+    const summary = byId('summary-output')?.innerText?.trim() || '';
+    const definitionTerm = byId('definition-term')?.textContent?.trim() || '';
+    const definition = byId('definition-output')?.textContent?.trim() || '';
+    const terms = Array.from(document.querySelectorAll('#tagged-terms-list li')).map(li => (li.textContent || '').trim());
+
+    const payload = {
+      title: 'MedLY AI Report',
+      transcript,
+      summary,
+      terms,
+      definition_term: definitionTerm,
+      definition
+    };
+
+    try {
+      // --- Send session data to the backend's PDF export endpoint ---
+      const res = await fetch('/api/export_pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to export PDF');
+      const data = await res.json();
+      // --- Trigger the file download in the browser ---
+      const a = document.createElement('a');
+      a.href = data.url;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      alert('PDF download failed. Please try again.');
+    }
+  }
+
+  // --- Attach the event listener to the created button(s) ---
+  btn.addEventListener('click', downloadPDF);
+  if (fab) fab.addEventListener('click', downloadPDF);
+})();
+</script>
+</body>
+</html>

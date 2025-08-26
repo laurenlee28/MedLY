@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medly Setup</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h2 {
+            margin: 0 0 1rem 0;
+            color: #2c5282;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #edf2f7;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4299e1;
+            transition: width 0.3s ease;
+        }
+        .status {
+            margin: 1rem 0;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+        .log {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f7fafc;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .log p {
+            margin: 0.2rem 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Medly Setup</h2>
+        <!-- Progress bar to show installation/loading progress -->
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <!-- Status text to describe the current operation -->
+        <div class="status" id="status">Initializing...</div>
+        <!-- Log area to display detailed messages from the main process -->
+        <div class="log" id="log"></div>
+    </div>
+    <script>
+        // --- This script runs in the loading window's renderer process ---
+        const { ipcRenderer } = require('electron');
+        
+        // --- Listen for 'progress' events from the main process ---
+        ipcRenderer.on('progress', (event, data) => {
+            document.getElementById('progress').style.width = `${data.percent}%`;
+            document.getElementById('status').textContent = data.status;
+        });
+
+        // --- Listen for 'log' events to display detailed messages ---
+        ipcRenderer.on('log', (event, message) => {
+            const log = document.getElementById('log');
+            const p = document.createElement('p');
+            p.textContent = message;
+            log.appendChild(p);
+            log.scrollTop = log.scrollHeight; // Auto-scroll to the bottom
+        });
+    </script>
+</body>
+</html>
