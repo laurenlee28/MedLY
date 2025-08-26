@@ -1,0 +1,22 @@
+# Ignore build output directory
+/dist
+
+# Ignore dependency directories
+/node_modules
+/medly
+
+# Ignore large model files
+# These should be managed with Git LFS or downloaded separately.
+/App/model/ner/model.data
+/App/model/ner/model.safetensors
+/App/model/ner/pytorch_model.bin
+/App/model/phi/genie_bundle/*.bin
+/App/model/phi/genie_bundle/*.dll
+
+# Ignore the nested Python environment inside the 'phi' model directory
+/App/model/phi/phi/
+
+# Ignore general OS and log files (optional but recommended)
+*.log
+.DS_Store
+Thumbs.db
