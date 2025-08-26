@@ -1,0 +1,51 @@
+{
+  "name": "medly-app",
+  "version": "1.0.0",
+  "description": "A medical conversation AI assistant powered by Electron and FastAPI.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Your Name",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "tree-kill": "^1.2.2"
+  },
+  "build": {
+    "appId": "com.yourname.medly",
+    "productName": "Medly AI Assistant",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "defaultArch": "x64",
+      "icon": "build/icon.ico"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "loading.html",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "App",
+        "to": "App"
+      },
+      {
+        "from": "venv",
+        "to": "venv"
+      }
+    ]
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
