@@ -90,6 +90,20 @@ Because some of these large model files exceed GitHub's 50MB size limit, the com
 
 - [Download the zip file from Google Drive](https://drive.google.com/file/d/1G8y32gs-pbjsC4RYQTy8VQq-kDo7OIQ1/view?usp=sharing)
 
+- If you download zip file from Google Drive, Please follow the next section
+
+- 1. zip-off the file
+ 
+- 2. open the window powershell in the root folder.
+ 
+- 3. make the venv and download requirements.
+ 
+- 4. Run the command below.
+    ```text
+     npm install
+     npm start
+     ```
+
 ---
 ## 💡 Usage
 Follow these steps to use Medly for real-time medical conversation analysis:
