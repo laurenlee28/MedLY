@@ -82,6 +82,10 @@ Because some of these large model files exceed GitHub's 50MB size limit, the com
 - 1. [Download the installer from Google Drive](https://drive.google.com/file/d/1wwKbO_GOdcS1Q69XhurM3SzMPHQvd-x4/view?usp=sharing)
 
 - 2. After the download is complete, run the .exe file to install the application.
+ 
+- 3. ### If you encounter issues while running the .exe file installed via the method above (e.g., errors about the file location or missing files), please download and use the zip file below instead.
+
+- [Download the zip file from Google Drive](https://drive.google.com/file/d/1G8y32gs-pbjsC4RYQTy8VQq-kDo7OIQ1/view?usp=sharing)
 
 ---
 ## 💡 Usage
