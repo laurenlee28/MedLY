@@ -75,6 +75,9 @@ Python: 3.12.X (Recommended)
 ---
 ## ⚙️ Installation
 
+"Please download the latest version of Node.js."
+ - [Official Page](https://nodejs.org/ko)
+
 This application utilizes open-source models (such as Qwen, NER, and OCR) that have been optimized for NPU performance through conversion to the ONNX file format.
 
 Because some of these large model files exceed GitHub's 50MB size limit, the complete installer is provided via an external link. (We are currently sharing it via Google Drive but plan to deploy it on a hosting service like Vercel in the future).
