@@ -88,7 +88,7 @@ Because some of these large model files exceed GitHub's 50MB size limit, the com
  
 - 3. ### If you encounter issues while running the .exe file installed via the method above (e.g., errors about the file location or missing files), please download and use the zip file below instead.
 
-- [Download the zip file from Google Drive](https://drive.google.com/file/d/1BaUWzifbFkpuqjScOVQEG7Ip-8rqM7jW/view?usp=drive_link)
+- [Download the zip file from Google Drive](https://drive.google.com/file/d/1gZ5tM-tmA-jY_Y1sznsonV38SO9SQsIP/view?usp=sharing)
 
 - If you download zip file from Google Drive, Please follow the next section
 
