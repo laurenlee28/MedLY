@@ -156,3 +156,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+## Open Source Licenses
+
+This project includes the following open-source models and libraries:
+
+### Qwen2.5-7B-Instruct
+- License: Apache License 2.0
+- Copyright: Alibaba
+
+### Tesseract OCR
+- License: Apache License 2.0
+- Copyright: Google
+
+### Bio_ClinicalBERT
+- License: MIT License
+- Copyright: Emily Alsentzer
+
+Full license texts:
+- https://www.apache.org/licenses/LICENSE-2.0
+- https://opensource.org/licenses/MIT
